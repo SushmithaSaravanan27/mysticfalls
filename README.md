@@ -1,4 +1,2 @@
-Name : Sushmitha S
-Superset Id : 5301545
-Mail Id : sus200327@gmail.com
+Name : Sushmitha S <br> Superset Id : 5301545 <br>  Mail Id : sus200327@gmail.com <br>
 Project Name : AmazeCare - Hospital Management System
