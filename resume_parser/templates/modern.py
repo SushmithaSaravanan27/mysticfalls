@@ -1,12 +1,25 @@
 import io
 from docx import Document
 from docx.shared import Pt, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
 
 from resume_parser.base import Resume
 
 
 ACCENT = RGBColor(0x24, 0x5C, 0xA6)  # blue accent
+
+
+def _tight(p):
+    fmt = p.paragraph_format
+    fmt.space_before = Pt(0)
+    fmt.space_after = Pt(0)
+    fmt.line_spacing = 1
+    try:
+        fmt.line_spacing_rule = WD_LINE_SPACING.SINGLE
+    except Exception:
+        # Fallback if environment lacks enum value support
+        pass
+    return p
 
 
 def _heading(doc: Document, text: str):
@@ -16,20 +29,21 @@ def _heading(doc: Document, text: str):
     r.font.size = Pt(12)
     r.font.color.rgb = ACCENT
     p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    _tight(p)
 
 
 def _muted(doc: Document, text: str):
     p = doc.add_paragraph()
     for r in p.runs:
         r.font.size = Pt(9)
-    return p
+    return _tight(p)
 
 
 def _small(doc: Document, text: str):
     p = doc.add_paragraph(text)
     for r in p.runs:
         r.font.size = Pt(9)
-    return p
+    return _tight(p)
 
 
 def _lines(doc: Document, lines):
@@ -39,6 +53,7 @@ def _lines(doc: Document, lines):
         para = doc.add_paragraph(b)
         for r in para.runs:
             r.font.size = Pt(10)
+        _tight(para)
 
 
 def generate_modern_docx(resume: Resume) -> io.BytesIO:
@@ -50,11 +65,13 @@ def generate_modern_docx(resume: Resume) -> io.BytesIO:
     r.bold = True
     r.font.size = Pt(22)
     r.font.color.rgb = ACCENT
+    _tight(p)
 
     if resume.headline:
         h = doc.add_paragraph(resume.headline)
         for rr in h.runs:
             rr.font.size = Pt(11)
+        _tight(h)
 
     contact_parts = []
     c = resume.contact
@@ -65,6 +82,7 @@ def generate_modern_docx(resume: Resume) -> io.BytesIO:
         cc = doc.add_paragraph(" · ".join(contact_parts))
         for rr in cc.runs:
             rr.font.size = Pt(9)
+        _tight(cc)
 
     # Summary
     if resume.summary:
@@ -72,6 +90,7 @@ def generate_modern_docx(resume: Resume) -> io.BytesIO:
         s = doc.add_paragraph(resume.summary)
         for rr in s.runs:
             rr.font.size = Pt(10)
+        _tight(s)
 
     # Skills
     if resume.skills:
@@ -79,6 +98,7 @@ def generate_modern_docx(resume: Resume) -> io.BytesIO:
         s = doc.add_paragraph(", ".join(resume.skills))
         for rr in s.runs:
             rr.font.size = Pt(10)
+        _tight(s)
 
     # Experience
     if resume.experience:
@@ -93,6 +113,7 @@ def generate_modern_docx(resume: Resume) -> io.BytesIO:
             for rr in h.runs:
                 rr.font.size = Pt(11)
                 # no bold for entries per request
+            _tight(h)
             _lines(doc, e.bullets)
 
     # Education
@@ -108,6 +129,7 @@ def generate_modern_docx(resume: Resume) -> io.BytesIO:
             for rr in h.runs:
                 rr.font.size = Pt(11)
                 # no bold for entries per request
+            _tight(h)
             _lines(doc, edu.details)
 
     # Projects
@@ -121,6 +143,7 @@ def generate_modern_docx(resume: Resume) -> io.BytesIO:
             for rr in tr.runs:
                 rr.font.size = Pt(11)
                 # no bold for entries per request
+            _tight(tr)
             _lines(doc, p.bullets)
 
     buf = io.BytesIO()
